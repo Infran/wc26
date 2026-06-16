@@ -1,0 +1,7 @@
+/wc26.exe
+/wc26
+/vendor/
+/.idea/
+/.vscode/
+*.test
+*.out
