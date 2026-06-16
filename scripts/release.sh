@@ -3,7 +3,7 @@ set -euo pipefail
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <tag> [release notes...]"
-  echo "  e.g. $0 v0.2.0 \"Added update command, auth token\""
+  echo "  e.g. $0 v0.3.0 \"Added update command, auth token\""
   exit 1
 fi
 
@@ -17,7 +17,6 @@ echo "=== Building $APP $TAG ==="
 
 mkdir -p dist
 
-# ldflags with version
 LDFLAGS="-X main.Version=${TAG#v}"
 
 build() {
@@ -36,12 +35,22 @@ build darwin  arm64 ""
 build linux   amd64 ""
 build linux   arm64 ""
 
+# --- Include install scripts ---
+echo ""
+echo "=== Including install scripts ==="
+cp install.ps1 dist/
+cp install.sh dist/
+chmod +x dist/install.sh
+
+# --- Generate checksums ---
 echo ""
 echo "=== Generating checksums ==="
 cd dist
-sha256sum * > "$APP-${TAG#v}-checksums.txt"
+sha256sum * > wc26-checksums.txt
+cat wc26-checksums.txt
 cd ..
 
+# --- Create GitHub release ---
 echo ""
 echo "=== Creating GitHub release ==="
 gh release create "$TAG" dist/* \
