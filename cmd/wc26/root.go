@@ -80,4 +80,5 @@ func init() {
 	rootCmd.AddCommand(healthCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(completionCmd)
+	rootCmd.AddCommand(updateCmd)
 }

@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"github.com/Infran/wc26/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 var authCmd = &cobra.Command{
@@ -102,9 +104,41 @@ var statusCmd = &cobra.Command{
 	},
 }
 
+var tokenCmd = &cobra.Command{
+	Use:   "token",
+	Short: "Display JWT token (prompts for password to validate first)",
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		email := viper.GetString("auth.email")
+		if email == "" {
+			return fmt.Errorf("not logged in. Run 'wc26 auth login <email> <password>' first")
+		}
+
+		fmt.Fprintf(os.Stderr, "Password for %s: ", email)
+		password, err := term.ReadPassword(int(syscall.Stdin))
+		fmt.Fprintln(os.Stderr)
+		if err != nil {
+			return fmt.Errorf("reading password: %w", err)
+		}
+		if len(password) == 0 {
+			return fmt.Errorf("password cannot be empty")
+		}
+
+		cl := newAPIClient()
+		resp, err := cl.Login(email, string(password))
+		if err != nil {
+			return fmt.Errorf("validation failed: %w", err)
+		}
+
+		fmt.Println(resp.Token)
+		return nil
+	},
+}
+
 func init() {
 	authCmd.AddCommand(registerCmd)
 	authCmd.AddCommand(loginCmd)
 	authCmd.AddCommand(logoutCmd)
 	authCmd.AddCommand(statusCmd)
+	authCmd.AddCommand(tokenCmd)
 }
